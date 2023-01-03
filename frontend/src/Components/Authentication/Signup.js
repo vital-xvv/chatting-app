@@ -3,6 +3,9 @@ import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import React, { useState } from "react";
 import { Input, InputGroup, InputRightElement } from "@chakra-ui/input";
 import { Button } from "@chakra-ui/button";
+import { useToast } from "@chakra-ui/react";
+import axios from "axios";
+import { useHistory } from "react-router-dom";
 
 const Signup = () => {
   const [name, setName] = useState();
@@ -11,14 +14,121 @@ const Signup = () => {
   const [password, setPassword] = useState();
   const [picture, setPicture] = useState();
   const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
+  const history = useHistory();
 
   const handleClick = () => {
     setShow(!show);
   };
 
-  const postDetails = (picture) => {};
+  const postDetails = (picture) => {
+    setLoading(true);
+    if (picture === undefined) {
+      toast({
+        title: "Please Select an Image",
+        // description: "We've created your account for you.",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "top-right",
+      });
+      return;
+    }
 
-  const submitSignUp = () => {};
+    if (picture.type === "image/jpeg" || picture.type === "image/png") {
+      const data = new FormData();
+      data.append("file", picture);
+      data.append("upload_preset", "NCity-chat-app");
+      data.append("cloud_name", "du7ritqnm");
+      fetch("https://api.cloudinary.com/v1_1/du7ritqnm/image/upload", {
+        method: "POST",
+        body: data,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setPicture(data.url.toString());
+          console.log(data.url.toString());
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.log(err);
+          setLoading(false);
+        });
+    } else {
+      toast({
+        title: "Please Select an Image",
+        // description: "We've created your account for you.",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "top-right",
+      });
+      setLoading(false);
+      return;
+    }
+  };
+
+  const submitSignUp = async () => {
+    setLoading(true);
+    if (!name || !password || !email || !confirmPassword) {
+      toast({
+        title: "Please fill out all the Fields",
+        // description: "We've created your account for you.",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+    if (password !== confirmPassword) {
+      toast({
+        title: "Passwords do not match",
+        // description: "We've created your account for you.",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const { data } = await axios.post(
+        "api/user",
+        { name, email, password, picture },
+        config
+      );
+
+      toast({
+        title: "Account created.",
+        description: "We've created your account for you.",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+        position: "top-right",
+      });
+
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setLoading(false);
+      history.push("/chats");
+    } catch (err) {
+      toast({
+        title: "Error occured",
+        description: "Failed to create account",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+        position: "top-right",
+      });
+      setLoading(false);
+    }
+  };
 
   return (
     <VStack spacing="5px">
@@ -93,6 +203,7 @@ const Signup = () => {
         width="100%"
         style={{ marginTop: 15 }}
         onClick={submitSignUp}
+        isLoading={loading}
       >
         Sign Up
       </Button>

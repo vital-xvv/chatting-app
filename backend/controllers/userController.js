@@ -61,4 +61,25 @@ const authorizeUser = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser, authorizeUser };
+const getAllUsers = asyncHandler(async (req, res) => {
+  const [users] = await User.findAll();
+  if (users.length !== 0) {
+    res.status(201).json(users);
+  } else {
+    res.status(401);
+    throw new Error("Failed to fetch all users");
+  }
+});
+
+const findUsersUsingSearch = asyncHandler(async (req, res) => {
+  const [users] = await User.find(req.query.search);
+  users.filter((u) => u._id !== req.user._id);
+  if (users.length !== 0) {
+    res.status(201).json(users);
+  } else {
+    res.status(401);
+    throw new Error(`Failed to fetch users by search: ${req.query.search}`);
+  }
+});
+
+module.exports = { registerUser, authorizeUser, findUsersUsingSearch };
