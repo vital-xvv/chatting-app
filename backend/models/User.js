@@ -73,13 +73,14 @@ class User {
     return connection.query(sql, [email]);
   }
 
-  static find(search) {
+  static find(search, id) {
     let sql =
       "SELECT * FROM `users` WHERE `email` LIKE '%" +
       search +
       "%' OR `name` LIKE '%" +
       search +
-      "%'";
+      "%' AND NOT `id`=" +
+      id;
     return connection.query(sql);
   }
 }

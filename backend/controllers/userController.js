@@ -72,7 +72,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 const findUsersUsingSearch = asyncHandler(async (req, res) => {
-  const [users] = await User.find(req.query.search);
+  const [users] = await User.find(req.query.search, req.user.id);
   users.filter((u) => u._id !== req.user._id);
   if (users.length !== 0) {
     res.status(201).json(users);
